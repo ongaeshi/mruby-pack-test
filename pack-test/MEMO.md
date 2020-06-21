@@ -2,7 +2,7 @@
 ```
 $ cd mruby/pack-test
 $ cat ../src/*.c > mruby.c
-$ cat ../mrblib/init_mrblib.c >> mruby.c 
+$ cat ../build/host/mrblib/mrblib.c >> mruby.c 
 $ cp ../src/value_array.h .
 $ gcc -I ../include/ mruby.c -lm
 ```
