@@ -57,12 +57,12 @@ str_to_double(mrb_state *mrb, const char *p, size_t len)
 mrb_value mrb_str_len_to_inum(mrb_state *mrb, const char *str, mrb_int len, mrb_int base, int badcheck);
 
 static void
-tempirep_free(mrb_state *mrb, void *p)
+load_tempirep_free(mrb_state *mrb, void *p)
 {
   if (p) mrb_irep_decref(mrb, (mrb_irep *)p);
 }
 
-static const mrb_data_type tempirep_type = { "temporary irep", tempirep_free };
+static const mrb_data_type load_tempirep_type = { "temporary irep", load_tempirep_free };
 
 static mrb_irep*
 read_irep_record_1(mrb_state *mrb, const uint8_t *bin, size_t *len, uint8_t flags)
@@ -72,7 +72,7 @@ read_irep_record_1(mrb_state *mrb, const uint8_t *bin, size_t *len, uint8_t flag
   ptrdiff_t diff;
   uint16_t tt, pool_data_len, snl;
   int plen;
-  struct RData *irep_obj = mrb_data_object_alloc(mrb, mrb->object_class, NULL, &tempirep_type);
+  struct RData *irep_obj = mrb_data_object_alloc(mrb, mrb->object_class, NULL, &load_tempirep_type);
   mrb_irep *irep = mrb_add_irep(mrb);
   int ai = mrb_gc_arena_save(mrb);
 
@@ -210,7 +210,7 @@ read_irep_record_1(mrb_state *mrb, const uint8_t *bin, size_t *len, uint8_t flag
 static mrb_irep*
 read_irep_record(mrb_state *mrb, const uint8_t *bin, size_t *len, uint8_t flags)
 {
-  struct RData *irep_obj = mrb_data_object_alloc(mrb, mrb->object_class, NULL, &tempirep_type);
+  struct RData *irep_obj = mrb_data_object_alloc(mrb, mrb->object_class, NULL, &load_tempirep_type);
   int ai = mrb_gc_arena_save(mrb);
   mrb_irep *irep = read_irep_record_1(mrb, bin, len, flags);
   int i;
@@ -532,7 +532,7 @@ read_irep(mrb_state *mrb, const uint8_t *bin, size_t bufsize, uint8_t flags)
     return NULL;
   }
 
-  irep_obj = mrb_data_object_alloc(mrb, mrb->object_class, NULL, &tempirep_type);
+  irep_obj = mrb_data_object_alloc(mrb, mrb->object_class, NULL, &load_tempirep_type);
 
   bin += sizeof(struct rite_binary_header);
   do {
@@ -612,7 +612,7 @@ load_irep(mrb_state *mrb, mrb_irep *irep, mrbc_context *c)
 MRB_API mrb_value
 mrb_load_irep_cxt(mrb_state *mrb, const uint8_t *bin, mrbc_context *c)
 {
-  struct RData *irep_obj = mrb_data_object_alloc(mrb, mrb->object_class, NULL, &tempirep_type);
+  struct RData *irep_obj = mrb_data_object_alloc(mrb, mrb->object_class, NULL, &load_tempirep_type);
   mrb_irep *irep = mrb_read_irep(mrb, bin);
   mrb_value ret;
 

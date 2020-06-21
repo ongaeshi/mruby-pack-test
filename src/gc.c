@@ -588,7 +588,7 @@ add_gray_list(mrb_state *mrb, mrb_gc *gc, struct RBasic *obj)
 }
 
 static int
-ci_nregs(mrb_callinfo *ci)
+gc_ci_nregs(mrb_callinfo *ci)
 {
   struct RProc *p = ci->proc;
   int n = 0;
@@ -619,7 +619,7 @@ mark_context_stack(mrb_state *mrb, struct mrb_context *c)
   if (c->stack == NULL) return;
   e = c->stack - c->stbase;
   if (c->ci) {
-    e += ci_nregs(c->ci);
+    e += gc_ci_nregs(c->ci);
   }
   if (c->stbase + e > c->stend) e = c->stend - c->stbase;
   for (i=0; i<e; i++) {
@@ -1005,7 +1005,7 @@ gc_gray_counts(mrb_state *mrb, mrb_gc *gc, struct RBasic *obj)
       i = c->stack - c->stbase;
 
       if (c->ci) {
-        i += ci_nregs(c->ci);
+        i += gc_ci_nregs(c->ci);
       }
       if (c->stbase + i > c->stend) i = c->stend - c->stbase;
       children += i;

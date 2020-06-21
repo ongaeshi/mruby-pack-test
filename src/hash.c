@@ -26,11 +26,11 @@ struct segkv {
   mrb_value val;
 };
 
-typedef struct segment {
+typedef struct hash_segment {
   uint16_t size;
-  struct segment *next;
+  struct hash_segment *next;
   struct segkv e[];
-} segment;
+} hash_segment;
 
 typedef struct segindex {
   size_t size;
@@ -40,8 +40,8 @@ typedef struct segindex {
 
 /* hash table structure */
 typedef struct htable {
-  segment *rootseg;
-  segment *lastseg;
+  hash_segment *rootseg;
+  hash_segment *lastseg;
   mrb_int size;
   uint16_t last_len;
   segindex *index;
@@ -171,7 +171,7 @@ ht_index(mrb_state *mrb, htable *t)
   size_t size = (size_t)t->size;
   size_t mask;
   segindex *index = t->index;
-  segment *seg;
+  hash_segment *seg;
   size_t i;
 
   /* allocate index table */
@@ -221,9 +221,9 @@ ht_index(mrb_state *mrb, htable *t)
 static void
 ht_compact(mrb_state *mrb, htable *t)
 {
-  segment *seg;
+  hash_segment *seg;
   uint16_t i, i2;
-  segment *seg2 = NULL;
+  hash_segment *seg2 = NULL;
   mrb_int size = 0;
 
   if (t == NULL) return;
@@ -277,8 +277,8 @@ ht_compact(mrb_state *mrb, htable *t)
   }
 }
 
-static segment*
-segment_alloc(mrb_state *mrb, segment *seg)
+static hash_segment*
+segment_alloc(mrb_state *mrb, hash_segment *seg)
 {
   uint32_t size;
 
@@ -288,7 +288,7 @@ segment_alloc(mrb_state *mrb, segment *seg)
     if (size > UINT16_MAX) size = UINT16_MAX;
   }
 
-  seg = (segment*)mrb_malloc(mrb, sizeof(segment)+sizeof(struct segkv)*size);
+  seg = (hash_segment*)mrb_malloc(mrb, sizeof(hash_segment)+sizeof(struct segkv)*size);
   seg->size = size;
   seg->next = NULL;
 
@@ -301,7 +301,7 @@ ht_index_put(mrb_state *mrb, htable *t, mrb_value key, mrb_value val)
 {
   segindex *index = t->index;
   size_t k, sp, step = 0, mask;
-  segment *seg;
+  hash_segment *seg;
 
   if (index->size >= UPPER_BOUND(index->capa)) {
     /* need to expand table */
@@ -331,7 +331,7 @@ ht_index_put(mrb_state *mrb, htable *t, mrb_value key, mrb_value val)
   if (t->last_len < seg->size) {
     index->table[k] = &seg->e[t->last_len++];
   }
-  else {                        /* append a new segment */
+  else {                        /* append a new hash_segment */
     seg->next = segment_alloc(mrb, seg);
     seg = seg->next;
     seg->next = NULL;
@@ -349,7 +349,7 @@ ht_index_put(mrb_state *mrb, htable *t, mrb_value key, mrb_value val)
 static void
 ht_put(mrb_state *mrb, htable *t, mrb_value key, mrb_value val)
 {
-  segment *seg;
+  hash_segment *seg;
   mrb_int i, deleted = 0;
 
   if (t == NULL) return;
@@ -361,7 +361,7 @@ ht_put(mrb_state *mrb, htable *t, mrb_value key, mrb_value val)
   while (seg) {
     for (i=0; i<seg->size; i++) {
       mrb_value k = seg->e[i].key;
-      /* Found room in last segment after last_len */
+      /* Found room in last hash_segment after last_len */
       if (!seg->next && i >= t->last_len) {
         seg->e[i].key = key;
         seg->e[i].val = val;
@@ -382,7 +382,7 @@ ht_put(mrb_state *mrb, htable *t, mrb_value key, mrb_value val)
   }
   /* Not found */
 
-  /* Compact if last segment has room */
+  /* Compact if last hash_segment has room */
   if (deleted > 0 && deleted > MRB_HT_INIT_SIZE) {
     ht_compact(mrb, t);
   }
@@ -394,7 +394,7 @@ ht_put(mrb_state *mrb, htable *t, mrb_value key, mrb_value val)
     i = t->last_len;
   }
   else {
-    /* append new segment */
+    /* append new hash_segment */
     seg = segment_alloc(mrb, t->lastseg);
     i = 0;
     if (t->rootseg == NULL) {
@@ -437,7 +437,7 @@ ht_index_get(mrb_state *mrb, htable *t, mrb_value key, mrb_value *vp)
 static mrb_bool
 ht_get(mrb_state *mrb, htable *t, mrb_value key, mrb_value *vp)
 {
-  segment *seg;
+  hash_segment *seg;
   mrb_int i;
 
   if (t == NULL) return FALSE;
@@ -469,7 +469,7 @@ ht_get(mrb_state *mrb, htable *t, mrb_value key, mrb_value *vp)
 static mrb_bool
 ht_del(mrb_state *mrb, htable *t, mrb_value key, mrb_value *vp)
 {
-  segment *seg;
+  hash_segment *seg;
   mrb_int i;
 
   if (t == NULL) return FALSE;
@@ -499,14 +499,14 @@ ht_del(mrb_state *mrb, htable *t, mrb_value key, mrb_value *vp)
 static void
 ht_foreach(mrb_state *mrb, htable *t, mrb_hash_foreach_func *func, void *p)
 {
-  segment *seg;
+  hash_segment *seg;
   mrb_int i;
 
   if (t == NULL) return;
   seg = t->rootseg;
   while (seg) {
     for (i=0; i<seg->size; i++) {
-      /* no value in last segment after last_len */
+      /* no value in last hash_segment after last_len */
       if (!seg->next && i >= t->last_len) {
         return;
       }
@@ -529,7 +529,7 @@ mrb_hash_foreach(mrb_state *mrb, struct RHash *hash, mrb_hash_foreach_func *func
 static htable*
 ht_copy(mrb_state *mrb, htable *t)
 {
-  segment *seg;
+  hash_segment *seg;
   htable *t2;
   mrb_int i;
 
@@ -557,12 +557,12 @@ ht_copy(mrb_state *mrb, htable *t)
 static void
 ht_free(mrb_state *mrb, htable *t)
 {
-  segment *seg;
+  hash_segment *seg;
 
   if (!t) return;
   seg = t->rootseg;
   while (seg) {
-    segment *p = seg;
+    hash_segment *p = seg;
     seg = seg->next;
     mrb_free(mrb, p);
   }
@@ -1009,7 +1009,7 @@ mrb_hash_delete(mrb_state *mrb, mrb_value self)
 static void
 ht_shift(mrb_state *mrb, htable *t, mrb_value *kp, mrb_value *vp)
 {
-  segment *seg = t->rootseg;
+  hash_segment *seg = t->rootseg;
   mrb_int i;
 
   while (seg) {
