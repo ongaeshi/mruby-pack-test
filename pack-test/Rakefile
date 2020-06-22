@@ -2,9 +2,16 @@
 require 'rake'
 task :default => :build
 
+ROOT_DIR = ".."
+MRBGEMS_DIR = File.join(ROOT_DIR, "mrbgems")
+
 task :install do
   sh "cat ../src/*.c > mruby.c"
   sh "cat ../build/host/mrblib/mrblib.c >> mruby.c"
+  cp File.join(MRBGEMS_DIR, "mruby-compiler/core/codegen.c"), "mruby-compiler-codegen.c"
+  cp File.join(MRBGEMS_DIR, "mruby-compiler/core/y.tab.c"), "mruby-compiler-y.tab.c"
+  cp File.join(MRBGEMS_DIR, "mruby-compiler/core/node.h"), "node.h"
+  cp File.join(MRBGEMS_DIR, "mruby-compiler/core/lex.def"), "lex.def"
 end
 
 task :build do
