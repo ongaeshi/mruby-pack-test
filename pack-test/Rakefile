@@ -1,0 +1,16 @@
+# encoding: utf-8
+require 'rake'
+task :default => :build
+
+task :install do
+  sh "cat ../src/*.c > mruby.c"
+  sh "cat ../build/host/mrblib/mrblib.c >> mruby.c"
+end
+
+task :build do
+ sh "gcc -I ../include/ *.c -lm"
+end
+
+task :clean do
+  rm_f "a.out"
+end
