@@ -15,7 +15,7 @@ task :install do
 end
 
 task :build do
- sh "gcc -I include *.c -lm"
+ sh "gcc -I include main.c src/*.c -lm"
 end
 
 task :clean do
