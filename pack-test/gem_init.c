@@ -101,14 +101,14 @@ mrb_final_mrbgems(mrb_state *mrb) {
   // GENERATED_TMP_mrb_mruby_print_gem_final(mrb);
   // GENERATED_TMP_mrb_mruby_sprintf_gem_final(mrb);
   // GENERATED_TMP_mrb_mruby_pack_gem_final(mrb);
-  // GENERATED_TMP_mrb_mruby_io_gem_final(mrb);
+  GENERATED_TMP_mrb_mruby_io_gem_final(mrb);
   // GENERATED_TMP_mrb_mruby_metaprog_gem_final(mrb);
 }
 
 void
 mrb_init_mrbgems(mrb_state *mrb) {
   // GENERATED_TMP_mrb_mruby_metaprog_gem_init(mrb);
-  // GENERATED_TMP_mrb_mruby_io_gem_init(mrb);
+  GENERATED_TMP_mrb_mruby_io_gem_init(mrb);
   // GENERATED_TMP_mrb_mruby_pack_gem_init(mrb);
   // GENERATED_TMP_mrb_mruby_sprintf_gem_init(mrb);
   // GENERATED_TMP_mrb_mruby_print_gem_init(mrb);
