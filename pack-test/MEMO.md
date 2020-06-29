@@ -1,4 +1,15 @@
-# pack手順
+# mruby-packer
+## TODO
+- 全てのgemをコピーする、自動化
+- アプリに組み込んで遊んでみる
+  - https://github.com/nothings/single_file_libs#graphics-2d
+  - https://github.com/cimgui/cimgui
+
+## DONE
+
+## pack手順
+Rakefileに移動した。
+
 ```
 $ cd mruby/pack-test
 $ cat ../src/*.c > mruby.c
